@@ -1,0 +1,14 @@
+{
+  "name": "epsiocr",
+  "version": "1.0.0",
+  "description": "OCR from EPSI project",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "express": "^4.16.3"
+  }
+}
