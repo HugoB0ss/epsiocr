@@ -4,6 +4,7 @@
   "description": "OCR from EPSI project",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "test"
   },
   "author": "",
