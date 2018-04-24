@@ -24,7 +24,9 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 	
 	const app = express()
 	app.use(fileUpload())
-
+	app.use('/bootstrap', express.static(path.resolve('node_modules/bootstrap/dist')))
+	app.use('/jquery', express.static(path.resolve('node_modules/jquery/dist')))
+	app.use('/style', express.static(path.resolve('style')))
 	app.get('/', (req, res) => {
 	  res.sendFile(path.join(__dirname, '/views/index.html'))
 	})

@@ -1,4 +1,25 @@
-<form action="/predict" method="post" encType="multipart/form-data">
-	<input type="file" name="image"/>
-	<input type="submit" value="Valider"/>
-</form>
+<!Doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="style/style.css"/>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <script src="jquery/jquery.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+	<title>EPSI OCR</title>
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="Absolute-Center is-Responsive">
+      <div class="col-sm-12 col-md-10 col-md-offset-1">
+		<form action="/predict" method="post" encType="multipart/form-data">
+			<input type="file" class="input-file" name="image"/>
+			<input class="myButton" type="submit" value="Valider"/>
+		</form>     
+      </div>  
+    </div>    
+  </div>
+</div>
+</body>
+<html>
