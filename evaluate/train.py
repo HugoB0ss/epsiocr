@@ -5,8 +5,10 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import sys
+import os
 
-STEP_NUMBER = 200
+STEP_NUMBER = os.environ.get('STEP_NUMBER', 200)
+MODEL_PATH = os.environ.get('MODEL_PATH', './model')
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -117,7 +119,7 @@ def main(argv):
   
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
-      model_fn=cnn_model_fn, model_dir="./model")
+      model_fn=cnn_model_fn, model_dir=MODEL_PATH)
 
   # Set up logging for predictions
   # Log the values in the "Softmax" tensor with label "probabilities"

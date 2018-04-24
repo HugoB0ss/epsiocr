@@ -7,6 +7,8 @@ const FILE_UPLOAD_DIR = process.env.FILE_UPLOAD_DIR || '/tmp/epsiOCR'
 const getImageExtention = (image) => image.split('.').pop()
 const imageIsValid = (image) => IMAGE_EXT_ALLOWED.includes(getImageExtention(image))
 
+const spawn = require("child_process").spawn;
+
 const path = require('path')
 const mkdirp = require('mkdirp')
 const uuid = require('uuid/v4')
@@ -38,7 +40,18 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 			image.mv(newImagePath)
 			.then(() => {
 				console.log(newImagePath)
-				res.send(newImagePath)
+				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), newImagePath], {env: {
+					MODEL_PATH: path.join(__dirname, '../evaluate/model')
+				}})
+				
+				pythonProcess.stdout.on('data', (data) => {
+				  res.write(data)
+				})
+
+				pythonProcess.on('close', (code) => {
+				  res.end()
+				})
+				
 			})
 			.catch((err) => {
 				console.error(err)
