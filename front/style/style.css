@@ -1,26 +1,20 @@
-body{
-  background: #00589F;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00589F', endColorstr='#0073CF', GradientType=0);
-  background: -webkit-linear-gradient(to bottom, #00589F 50%, #0073CF) !important;
-  background: -moz-linear-gradient(to bottom, #00589F 50%, #0073CF) !important;
-  background: -ms-linear-gradient(to bottom, #00589F 50%, #0073CF) !important;
-  background: -o-linear-gradient(to bottom, #00589F 50%, #0073CF) !important;
-  background: linear-gradient(to bottom, #00589F 50%, #0073CF) !important;
+body,html{
+  background: #bdc3c7;
   color: white;
 }
-
-div.well{
-  height: 250px;
-} 
-
-.Absolute-Center {
+form{
+	width: 100%;
+}
+.Absolute-Center {	
   margin: auto;
   position: absolute;
   top: 0; left: 0; bottom: 0; right: 0;
 }
-
+#btn{
+	text-align:right;
+	width:100%;
+}
 .Absolute-Center.is-Responsive {
-  text-align:center;
   width: 50%; 
   height: 50%;
   min-width: 200px;
@@ -29,8 +23,12 @@ div.well{
   background-color: #2ecc71;
 }
 
+.input-file{
+	margin-top:15%;
+}
+
 .myButton {
-	margin-top:80%;
+	margin-top:30%;
 	-moz-box-shadow:inset 0px 1px 0px 0px #cf866c;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #cf866c;
 	box-shadow:inset 0px 1px 0px 0px #cf866c;

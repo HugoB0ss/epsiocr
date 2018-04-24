@@ -9,17 +9,14 @@
 	<title>EPSI OCR</title>
 </head>
 <body>
-<div class="container">
-  <div class="row">
     <div class="Absolute-Center is-Responsive">
-      <div class="col-sm-12 col-md-10 col-md-offset-1">
 		<form action="/predict" method="post" encType="multipart/form-data">
+			<h3 id="message">Sending a letter</h3>
 			<input type="file" class="input-file" name="image"/>
-			<input class="myButton" type="submit" value="Valider"/>
+			<div id="btn">
+				<input class="myButton" type="submit" value="Valider"/>
+			</div>
 		</form>     
-      </div>  
-    </div>    
-  </div>
-</div>
+	</div>
 </body>
 <html>
