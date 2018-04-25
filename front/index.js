@@ -23,7 +23,7 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 	}
 	
 	const app = express()
-	app.use(fileUpload())
+	app.use(fileUpload({limits: { fileSize: 4 * 1024 * 1024 }}))
 	app.use('/bootstrap', express.static(path.resolve('node_modules/bootstrap/dist')))
 	app.use('/jquery', express.static(path.resolve('node_modules/jquery/dist')))
 	app.use('/style', express.static(path.resolve('style')))
@@ -38,7 +38,7 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 		}
 		else{
 			const imageUuid = uuid()
-			const newImagePath = path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`)
+			const newImagePath = path.normalize(path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`))
 			image.mv(newImagePath)
 			.then(() => {
 				console.log(newImagePath)

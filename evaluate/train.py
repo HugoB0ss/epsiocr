@@ -6,9 +6,11 @@ import numpy as np
 import tensorflow as tf
 import sys
 import os
+from PIL import Image
 
 STEP_NUMBER = os.environ.get('STEP_NUMBER', 200)
 MODEL_PATH = os.environ.get('MODEL_PATH', './model')
+FILE_SIZE = 28,28
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -106,17 +108,10 @@ def cnn_model_fn(features, labels, mode):
 
 def main(argv):
   argv = argv[1:]
-  print(argv)
+  #print(argv)
   sess = tf.Session()
   sess.run(tf.global_variables_initializer())
 
-  # Load training and eval data
-  mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-  train_data = mnist.train.images  # Returns np.array
-  train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-  eval_data = mnist.test.images  # Returns np.array
-  eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
-  
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
       model_fn=cnn_model_fn, model_dir=MODEL_PATH)
@@ -127,13 +122,20 @@ def main(argv):
   logging_hook = tf.train.LoggingTensorHook(
       tensors=tensors_to_log, every_n_iter=50)
   
-  eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={"x": eval_data[:25]},
-    y=eval_labels[:25],
-    num_epochs=1,
-    shuffle=False)
-
   if len(argv) == 0:
+    # Load training and eval data
+    mnist = tf.contrib.learn.datasets.load_dataset("mnist")
+    train_data = mnist.train.images  # Returns np.array
+    train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
+    eval_data = mnist.test.images  # Returns np.array
+    eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
+
+    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+      x={"x": eval_data[:25]},
+      y=eval_labels[:25],
+      num_epochs=1,
+      shuffle=False)
+  
     # Train the model
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
       x={"x": train_data},
@@ -141,6 +143,7 @@ def main(argv):
       batch_size=100,
       num_epochs=None,
       shuffle=True)
+    
     mnist_classifier.train(
       input_fn=train_input_fn,
       steps=STEP_NUMBER,
@@ -150,13 +153,32 @@ def main(argv):
     eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
     print(eval_results)
   else:
+    filesDataList = []
+    for infile in argv:
+      outfile = os.path.splitext(infile)[0] + ".thumbnail"
+      if infile != outfile:
+        im = Image.open(infile)
+        im.thumbnail(FILE_SIZE, Image.ANTIALIAS) # Convert to FILE_SIZE size
+        newImg = Image.new('RGBA', FILE_SIZE,  (255, 255, 255, 0))
+        newImg.paste(im, (int((FILE_SIZE[0] - im.size[0]) / 2), int((FILE_SIZE[1] - im.size[1]) / 2)))
+        newImg = newImg.convert('L')
+        pix = newImg.load() # Get the pixels values
+        fileData = []
+        for y in range(FILE_SIZE[0]):
+          for x in range(FILE_SIZE[1]):
+            fileData.append((1 - (pix[x,y] / 255)))
+        filesDataList.append(fileData)
+        
+      filesDataList = np.array(filesDataList, dtype=np.float32)
+      filesDataList = np.array(filesDataList)
+      eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+      x={"x": filesDataList},
+      num_epochs=1,
+      shuffle=False)
+    
     eval_results = list(mnist_classifier.predict(input_fn=eval_input_fn))
     eval_results = [p["classes"] for p in eval_results]
-    print(
-      "supposed to be {}\nNew Samples, Class Predictions:    {}\n"
-      .format(eval_labels[:25], eval_results))
-
-
+    print(eval_results)
 
 if __name__ == "__main__":
   tf.app.run()
