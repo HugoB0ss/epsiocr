@@ -206,7 +206,9 @@ def main(argv):
     
     eval_results = list(mnist_classifier.predict(input_fn=eval_input_fn))
     eval_results = [p["classes"] for p in eval_results]
-    print(eval_results)
+    eval_results = ["{}|{}".format(argv[i], r) for i,r in enumerate(eval_results)]
+    for result in eval_results:
+        print(result)
 
 if __name__ == "__main__":
   tf.app.run()

@@ -3,6 +3,7 @@ const PORT = process.env.PORT || 3000
 const IMAGE_FIELD_NAME = 'image'
 const IMAGE_EXT_ALLOWED = ['jpg', 'png']
 const FILE_UPLOAD_DIR = process.env.FILE_UPLOAD_DIR || '/tmp/epsiOCR'
+const EOL = require('os').EOL
 
 const getImageExtention = (image) => image.split('.').pop()
 const imageIsValid = (image) => IMAGE_EXT_ALLOWED.includes(getImageExtention(image))
@@ -42,27 +43,26 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 			Promise.all(images.map((image) => {
 				const imageUuid = uuid()
 				const newImagePath = path.normalize(path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`))
-				newImagesPath = [...newImagesPath, newImagePath]
+				newImagesPath = [...newImagesPath, [image.name, newImagePath]]
 				return image.mv(newImagePath)				
 			}))
 			.then(() => {
-				console.log(newImagesPath)
-				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), ...newImagesPath], {env: {
+				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
 				
+				let pythonData = []
 				pythonProcess.stdout.on('data', (data) => {
-				  res.write(data)
+				  data = data.toString().split(EOL)
+				  data.pop()
+				  data = data.reduce((acc, curr) => {
+					  const [path, result] = curr.split('|')
+					  const originalPath = newImagesPath.find((p) => p[1] === path)[0]
+					  console.log(originalPath, result)
+					  return {...acc, [originalPath]: result}
+				  }, {})
+				  res.send(data)
 				})
-
-				pythonProcess.stdout.on('error', (data) => {
-				  console.error(data)
-				})
-
-				pythonProcess.on('close', (code) => {
-				  res.end()
-				})
-				
 			})
 			.catch((err) => {
 				console.error(err)
