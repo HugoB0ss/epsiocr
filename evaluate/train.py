@@ -6,7 +6,8 @@ import numpy as np
 import tensorflow as tf
 import sys
 import os
-from PIL import Image
+from PIL import Image, ImageOps
+import csv
 
 STEP_NUMBER = os.environ.get('STEP_NUMBER', 200)
 MODEL_PATH = os.environ.get('MODEL_PATH', './model')
@@ -124,8 +125,26 @@ def main(argv):
   
   if len(argv) == 0:
     # Load training and eval data
+	
+	#CSV LOAD
+    """with open('train.csv', 'r') as trainFile:
+      train_data = []
+      train_labels = []
+      reader = csv.reader(trainFile, delimiter=',')
+      firstline = True
+      for row in reader:
+        if firstline:    #skip first line
+          firstline = False
+          continue
+        train_labels.append(row.pop(0))
+        row = np.array(row, dtype=np.float32)
+        train_data.append(row)
+      train_data = np.array(train_data)
+      train_labels = np.array(train_labels, dtype=np.int32)"""
+
     mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-    train_data = mnist.train.images  # Returns np.array
+    #MNIST LOAD
+	train_data = mnist.train.images  # Returns np.array
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_data = mnist.test.images  # Returns np.array
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
@@ -159,14 +178,20 @@ def main(argv):
       if infile != outfile:
         im = Image.open(infile)
         im.thumbnail(FILE_SIZE, Image.ANTIALIAS) # Convert to FILE_SIZE size
-        newImg = Image.new('RGBA', FILE_SIZE,  (255, 255, 255, 0))
-        newImg.paste(im, (int((FILE_SIZE[0] - im.size[0]) / 2), int((FILE_SIZE[1] - im.size[1]) / 2)))
-        newImg = newImg.convert('L')
+        im = im.convert('L')
+        im = ImageOps.invert(im)
+        newImg = Image.new('L', FILE_SIZE)
+        box = (
+            int((FILE_SIZE[0] - im.size[0]) / 2),
+            int((FILE_SIZE[1] - im.size[1]) / 2)
+          )
+        newImg.paste(im, box)
+        newImg.save("{}_compressed.jpg".format(os.path.splitext(infile)[0]))
         pix = newImg.load() # Get the pixels values
         fileData = []
         for y in range(FILE_SIZE[0]):
           for x in range(FILE_SIZE[1]):
-            fileData.append((1 - (pix[x,y] / 255)))
+            fileData.append((pix[x,y] / 255))
         filesDataList.append(fileData)
         
       filesDataList = np.array(filesDataList, dtype=np.float32)
