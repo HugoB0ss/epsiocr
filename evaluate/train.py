@@ -186,17 +186,20 @@ def main(argv):
             int((FILE_SIZE[1] - im.size[1]) / 2)
           )
         newImg.paste(im, box)
-        newImg.save("{}_compressed.jpg".format(os.path.splitext(infile)[0]))
+        #newImg.save("{}_compressed.jpg".format(os.path.splitext(infile)[0]))
         pix = newImg.load() # Get the pixels values
         fileData = []
         for y in range(FILE_SIZE[0]):
           for x in range(FILE_SIZE[1]):
             fileData.append((pix[x,y] / 255))
+        percentiles = np.percentile(fileData, range(0, 100, 25))
+        fileData = [1 if v > percentiles[3] else 0 for v in fileData] # We use the last percentile to remove noise
+        Image.fromarray(np.array([v*255 for v in fileData], dtype=np.uint8).reshape(28,28)).save("{}_compressed.jpg".format(os.path.splitext(infile)[0]))
         filesDataList.append(fileData)
         
-      filesDataList = np.array(filesDataList, dtype=np.float32)
-      filesDataList = np.array(filesDataList)
-      eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+    filesDataList = np.array(filesDataList, dtype=np.float32)
+    filesDataList = np.array(filesDataList)
+    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
       x={"x": filesDataList},
       num_epochs=1,
       shuffle=False)

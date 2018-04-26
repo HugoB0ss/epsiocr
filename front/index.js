@@ -32,22 +32,31 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 	})
 
 	app.post('/predict', (req, res) => {
-		const image = (req.files || {})[IMAGE_FIELD_NAME]
-		if (!image || !imageIsValid(image.name)){
-			return res.status(400).send(`No files were uploaded or the file don't have any of the following extentions: ${IMAGE_EXT_ALLOWED.join(', ')}`)
+		let images = (req.files || {})[IMAGE_FIELD_NAME]
+		images = images && !Array.isArray(images) ? [images] : images
+		if (!images || images.some( (image) => !imageIsValid(image.name))){
+			return res.status(400).send(`No files were uploaded or one of the files don't have any of the following extentions: ${IMAGE_EXT_ALLOWED.join(', ')}`)
 		}
 		else{
-			const imageUuid = uuid()
-			const newImagePath = path.normalize(path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`))
-			image.mv(newImagePath)
+			let newImagesPath = []
+			Promise.all(images.map((image) => {
+				const imageUuid = uuid()
+				const newImagePath = path.normalize(path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`))
+				newImagesPath = [...newImagesPath, newImagePath]
+				return image.mv(newImagePath)				
+			}))
 			.then(() => {
-				console.log(newImagePath)
-				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), newImagePath], {env: {
+				console.log(newImagesPath)
+				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), ...newImagesPath], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
 				
 				pythonProcess.stdout.on('data', (data) => {
 				  res.write(data)
+				})
+
+				pythonProcess.stdout.on('error', (data) => {
+				  console.error(data)
 				})
 
 				pythonProcess.on('close', (code) => {
