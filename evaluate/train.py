@@ -125,8 +125,8 @@ def main(argv):
   
   if len(argv) == 0:
     # Load training and eval data
-	
-	#CSV LOAD
+    
+    #CSV LOAD
     """with open('train.csv', 'r') as trainFile:
       train_data = []
       train_labels = []
@@ -144,7 +144,7 @@ def main(argv):
 
     mnist = tf.contrib.learn.datasets.load_dataset("mnist")
     #MNIST LOAD
-	train_data = mnist.train.images  # Returns np.array
+    train_data = mnist.train.images  # Returns np.array
     train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
     eval_data = mnist.test.images  # Returns np.array
     eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
