@@ -11,6 +11,7 @@ import csv
 
 STEP_NUMBER = os.environ.get('STEP_NUMBER', 200)
 MODEL_PATH = os.environ.get('MODEL_PATH', './model')
+PERCENTILE_LIMIT = int(os.environ.get('PERCENTILE_LIMIT', 90))
 FILE_SIZE = 28,28
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -192,8 +193,8 @@ def main(argv):
         for y in range(FILE_SIZE[0]):
           for x in range(FILE_SIZE[1]):
             fileData.append((pix[x,y] / 255))
-        percentiles = np.percentile(fileData, range(0, 100, 25))
-        fileData = [1 if v > percentiles[3] else 0 for v in fileData] # We use the last percentile to remove noise
+        limit = np.percentile(fileData, PERCENTILE_LIMIT)
+        fileData = [1 if v > limit else 0 for v in fileData] # We use a percentile limit to remove noise
         Image.fromarray(np.array([v*255 for v in fileData], dtype=np.uint8).reshape(28,28)).save("{}_compressed.jpg".format(os.path.splitext(infile)[0]))
         filesDataList.append(fileData)
         
