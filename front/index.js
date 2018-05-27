@@ -47,7 +47,7 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				return image.mv(newImagePath)				
 			}))
 			.then(() => {
-				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/train.py'), ...newImagesPath.map((p) => p[1])], {env: {
+				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/split.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
 				
@@ -55,6 +55,7 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				pythonProcess.stdout.on('data', (data) => {
 				  data = data.toString().split(EOL)
 				  data.pop()
+				  console.log(data)
 				  data = data.reduce((acc, curr) => {
 					  const [path, result] = curr.split('|')
 					  const originalPath = newImagesPath.find((p) => p[1] === path)[0]
@@ -62,6 +63,14 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 					  return {...acc, [originalPath]: result}
 				  }, {})
 				  res.send(data)
+				})
+				
+				pythonProcess.stderr.on('data', (data) =>  {
+					pythonProcess.kill('SIGINT')
+					  data = data.toString().split(EOL)
+					  data.pop()
+					  console.error('error')
+					  console.error(data)
 				})
 			})
 			.catch((err) => {
