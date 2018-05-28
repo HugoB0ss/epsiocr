@@ -3,6 +3,7 @@ import cv2
 from matplotlib import pyplot as plt
 import uuid
 import sys
+import subprocess
 
 def main(argv):
 
@@ -67,11 +68,9 @@ def main(argv):
 			filesNames.append(fileName)
 			cv2.imwrite(fileName, img)
 		nextParams.extend(filesNames)
-	args = 'set MODEL_PATH="'+os.path.dirname(os.path.abspath(sys.argv[0]))+'\model" && python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/train.py '+' '.join(nextParams)
-	print(args)
-	cmd = os.popen(args)
-	r = cmd.read()
-	cmd.close()
-		
+	args = 'python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/train.py '+' '.join(nextParams)
+	#print(args)
+	cmd = subprocess.Popen(args, cwd=os.path.dirname(os.path.abspath(sys.argv[0])))
+	print(cmd.communicate()[0])
 if __name__ == "__main__":
 	main(sys.argv[1:])

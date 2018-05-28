@@ -47,21 +47,33 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				return image.mv(newImagePath)				
 			}))
 			.then(() => {
+				console.log(newImagesPath)
 				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/split.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
-				
-				let pythonData = []
 				pythonProcess.stdout.on('data', (data) => {
-				  data = data.toString().split(EOL)
-				  data.pop()
-				  console.log(data)
+					data = data.toString().split(EOL)
+					data.pop()
+					newData=[]
+					var i,j,temparray,chunk = 5;
+					for (i=0,j=data.length; i<j; i+=chunk) {
+						temparray = data.slice(i,i+chunk);
+						newData = [...newData, temparray]
+					}
+
+					
+				/*	console.log(data[0])
+					data.pop()
 				  data = data.reduce((acc, curr) => {
 					  const [path, result] = curr.split('|')
 					  const originalPath = newImagesPath.find((p) => p[1] === path)[0]
+					  console.log("LOG")
 					  console.log(originalPath, result)
 					  return {...acc, [originalPath]: result}
-				  }, {})
+				  }, {})*/
+	  				console.log(newData.length)
+				  data = newData.reduce((a,c,i) => ({...a, [newImagesPath[i][0]]: c}), {})
+				  console.log(data)
 				  res.send(data)
 				})
 				
@@ -69,8 +81,8 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 					pythonProcess.kill('SIGINT')
 					  data = data.toString().split(EOL)
 					  data.pop()
-					  console.error('error')
-					  console.error(data)
+					  console.log("ERROR")
+					  console.log(data)
 				})
 			})
 			.catch((err) => {
