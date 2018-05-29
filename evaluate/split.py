@@ -41,35 +41,48 @@ def main(argv):
 		newList = []
 		btw=0
 		NB_ELEMENTS = 4
-		SPACE_BTW = 5
+		SPACE_BTW = 17
 		sList = sorted(cnts, key=lambda c: c[1])
+		sList.reverse()
 		for i,t in enumerate(sList):
 			if i !=0 and abs(sList[i-1][1] - t[1]) < SPACE_BTW:
 				btw+=1
-				if btw == NB_ELEMENTS and t[1] > 10:
+				if btw == NB_ELEMENTS and t[1] > 15:
 					newList.extend(sList[i-NB_ELEMENTS-1:i])
+					break
 			else:
 				btw=0
 			
-	#	cv2.drawContours(image, contours, -1, (250, 0, 0), 10)
-	#	cv2.drawContours(image, [t[0] for t in newList], -1, (0, 250, 0), 20)
+		#cv2.drawContours(image, contours, -1, (250, 0, 0), 10)
+		#cv2.drawContours(image, [t[0] for t in cnts], -1, (0, 0, 250), 20)
+		cv2.drawContours(image, [t[0] for t in newList], -1, (0, 250, 0), 30)
 		
 		imrvb = image[:,:,::-1]
 		#plt.figure(figsize=(5,5))
 		plt.imshow(imrvb)
 		plt.title("Contours")
+		#plt.show()
+		
 		
 		newList = sorted(newList, key=lambda c: c[2][0])
 		filesNames = []
-		for pos in newList:
-			(x, y, w, h) = pos[2]
-			img = image[y:y+h,x:x+w].copy()
-			fileName = os.path.dirname(os.path.abspath(f))+'/sub_'+str(uuid.uuid4())+'.png'
-			filesNames.append(fileName)
-			cv2.imwrite(fileName, img)
+		
+		if len(newList) == 0:
+			print(f)
+			for _ in range(5):
+				filesNames.append("NULL")
+		else:
+			for pos in newList:
+				(x, y, w, h) = pos[2]
+				img = image[y:y+h,x:x+w].copy()
+				fileName = os.path.dirname(os.path.abspath(f))+'/sub_'+str(uuid.uuid4())+'.png'
+				filesNames.append(fileName)
+				cv2.imwrite(fileName, img)
+
 		nextParams.extend(filesNames)
+		
 	args = 'python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/train.py '+' '.join(nextParams)
-	#print(args)
+	#print(nextParams)
 	cmd = subprocess.Popen(args, cwd=os.path.dirname(os.path.abspath(sys.argv[0])))
 	print(cmd.communicate()[0])
 if __name__ == "__main__":

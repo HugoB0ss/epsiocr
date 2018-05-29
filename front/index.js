@@ -47,7 +47,7 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				return image.mv(newImagePath)				
 			}))
 			.then(() => {
-				console.log(newImagesPath)
+				//console.log(newImagesPath)
 				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/split.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
@@ -71,9 +71,8 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 					  console.log(originalPath, result)
 					  return {...acc, [originalPath]: result}
 				  }, {})*/
-	  				console.log(newData.length)
+				  console.log(newData)
 				  data = newData.reduce((a,c,i) => ({...a, [newImagesPath[i][0]]: c}), {})
-				  console.log(data)
 				  res.send(data)
 				})
 				

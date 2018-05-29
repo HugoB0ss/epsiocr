@@ -171,10 +171,12 @@ def main(argv):
 
     # Evaluate the model and print results  
     eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
-    print(eval_results)
+    #print(eval_results)
   else:
     filesDataList = []
     for infile in argv:
+      if infile == "NULL":
+        continue
       outfile = os.path.splitext(infile)[0] + ".thumbnail"
       if infile != outfile:
         im = Image.open(infile)
@@ -207,12 +209,18 @@ def main(argv):
     
     eval_results = list(mnist_classifier.predict(input_fn=eval_input_fn))
     eval_results = [p["classes"] for p in eval_results]
-    for r in eval_results:
-	    print(r)
+    decalage = 0
+    for i,r in enumerate(argv):
+        if argv[i] == "NULL":
+          decalage += 1
+          print("-1")
+        else:
+            print(eval_results[i-decalage])
     """eval_results = ["{}|{}".format(argv[i], r) for i,r in enumerate(eval_results)]
     for result in eval_results:
         print(result)
     """
 if __name__ == "__main__":
+  #print(sys.argv)
   tf.app.run()
 #https://opencv.org/
