@@ -8,6 +8,7 @@ const EOL = require('os').EOL
 // Fonctions
 const getImageExtention = (image) => image.split('.').pop()
 const imageIsValid = (image) => IMAGE_EXT_ALLOWED.includes(getImageExtention(image))
+const getTime = () => (new Date).getTime()
 
 const spawn = require("child_process").spawn;
 
@@ -59,8 +60,10 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 			}))
 			.then(() => {
 				
-				// On crée un processus python pour découper nos images envoyées
+				// On crée un processus python pour découper nos images envoyées avec le temps d'exécution
 				//console.log(newImagesPath)
+				
+				const startTime = getTime()
 				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/split.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
 				}})
@@ -91,7 +94,8 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				  console.log(newData)
 				  data = newData.reduce((a,c,i) => ({...a, [newImagesPath[i][0]]: c}), {})
 				  
-				  res.send(data)
+				  const diff_time = getTime() - startTime
+				  res.send({data, _execution_time: `${diff_time/1000} seconds`})
 				})
 				
 				// Si on a une erreur, alors on arrette le process et on affiche le script
