@@ -1,3 +1,4 @@
+# Modules
 import os
 import cv2
 from matplotlib import pyplot as plt
@@ -10,6 +11,8 @@ def main(argv):
 	if len(argv) == 0:
 		raise Exception("No files given")
 
+	# On charge les emplacements des fichiers donnés en paramètres
+	
 	files = [os.path.abspath(p) for p in argv if os.path.splitext(p)[1] == '.jpg']
 	#files = files[-1:]
 
@@ -17,13 +20,18 @@ def main(argv):
 	for f in files:
 		image = cv2.imread(f)
 		
+		
+		# On modifie l'image pour y appliquer les transformations nécessaires
 		imageGris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 			
 		blur = cv2.GaussianBlur(imageGris, (11,11), 0)
 		(ret1,imageGris) = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)
 		
+		# On cherche les contours se trouvant dans l'image
 		image2,contours,hierarchy = cv2.findContours(imageGris.copy(), cv2.RETR_LIST , cv2.CHAIN_APPROX_SIMPLE)
-			
+				
+		
+		# On sélectionne uniquement les formes carrées qui sont proches les unes des autres ( trouver les zone de texte ) 
 		cnts = []
 		firstPointsList = []
 		for c in contours:
@@ -38,6 +46,7 @@ def main(argv):
 					firstPointsList.append((y,y+h))
 					cnts.append((c,peri, positions))
 		
+		# On sélectionne uniquement les données pertinentes
 		newList = []
 		btw=0
 		NB_ELEMENTS = 4
@@ -52,21 +61,24 @@ def main(argv):
 					break
 			else:
 				btw=0
-			
+		# DEBUG	
 		#cv2.drawContours(image, contours, -1, (250, 0, 0), 10)
 		#cv2.drawContours(image, [t[0] for t in cnts], -1, (0, 0, 250), 20)
-		cv2.drawContours(image, [t[0] for t in newList], -1, (0, 250, 0), 30)
+		#cv2.drawContours(image, [t[0] for t in newList], -1, (0, 250, 0), 30)
 		
+		"""
 		imrvb = image[:,:,::-1]
 		#plt.figure(figsize=(5,5))
 		plt.imshow(imrvb)
 		plt.title("Contours")
-		#plt.show()
+		plt.show()
+		"""
 		
-		
+		# On ordone les données
 		newList = sorted(newList, key=lambda c: c[2][0])
 		filesNames = []
 		
+		# Si les données n'ont pas été trouvées, on affiche NULL, sinon on donne le nouvel emplacement de la sous-image
 		if len(newList) == 0:
 			print(f)
 			for _ in range(5):
@@ -81,6 +93,7 @@ def main(argv):
 
 		nextParams.extend(filesNames)
 		
+	# On crée un processus python en donnant les emplacement des sous-images en paramètres
 	args = 'python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/train.py '+' '.join(nextParams)
 	#print(nextParams)
 	cmd = subprocess.Popen(args, cwd=os.path.dirname(os.path.abspath(sys.argv[0])))

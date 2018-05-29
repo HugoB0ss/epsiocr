@@ -1,15 +1,17 @@
-
+// variables d'environnement
 const PORT = process.env.PORT || 3000
 const IMAGE_FIELD_NAME = 'image'
 const IMAGE_EXT_ALLOWED = ['jpg', 'png']
 const FILE_UPLOAD_DIR = process.env.FILE_UPLOAD_DIR || '/tmp/epsiOCR'
 const EOL = require('os').EOL
 
+// Fonctions
 const getImageExtention = (image) => image.split('.').pop()
 const imageIsValid = (image) => IMAGE_EXT_ALLOWED.includes(getImageExtention(image))
 
 const spawn = require("child_process").spawn;
 
+// Modules
 const path = require('path')
 const mkdirp = require('mkdirp')
 const uuid = require('uuid/v4')
@@ -17,29 +19,38 @@ const express = require('express')
 const fileUpload = require('express-fileupload')
 
 mkdirp(FILE_UPLOAD_DIR, (err) => {
+	//On crée le dossier temporaire si nécessaire
 	if(err){
 		console.error(`Can't create ${FILE_UPLOAD_DIR} directory !`)
 		console.error(err)
 		process.exit(1)
 	}
 	
+	// On créee un serveur web tout en limitant la taille d'upload maximale
 	const app = express()
 	app.use(fileUpload({limits: { fileSize: 4 * 1024 * 1024 }}))
 	app.use('/bootstrap', express.static(path.resolve('node_modules/bootstrap/dist')))
 	app.use('/jquery', express.static(path.resolve('node_modules/jquery/dist')))
 	app.use('/style', express.static(path.resolve('style')))
+	
+	// Page d'acceuil
 	app.get('/', (req, res) => {
 	  res.sendFile(path.join(__dirname, '/views/index.html'))
 	})
 
+	// Module d'intelligence
 	app.post('/predict', (req, res) => {
 		let images = (req.files || {})[IMAGE_FIELD_NAME]
 		images = images && !Array.isArray(images) ? [images] : images
+		
+		// On vérifie que le fichier possède un format utilisable
 		if (!images || images.some( (image) => !imageIsValid(image.name))){
 			return res.status(400).send(`No files were uploaded or one of the files don't have any of the following extentions: ${IMAGE_EXT_ALLOWED.join(', ')}`)
 		}
 		else{
 			let newImagesPath = []
+			
+			// On déplace chaque Image dans le dossier temporaire, tout en enrengistrant leur nom d'origine
 			Promise.all(images.map((image) => {
 				const imageUuid = uuid()
 				const newImagePath = path.normalize(path.join(FILE_UPLOAD_DIR, `${imageUuid}.${getImageExtention(image.name)}`))
@@ -47,6 +58,8 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 				return image.mv(newImagePath)				
 			}))
 			.then(() => {
+				
+				// On crée un processus python pour découper nos images envoyées
 				//console.log(newImagesPath)
 				const pythonProcess = spawn('python',[path.join(__dirname, '../evaluate/split.py'), ...newImagesPath.map((p) => p[1])], {env: {
 					MODEL_PATH: path.join(__dirname, '../evaluate/model')
@@ -56,6 +69,8 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 					data.pop()
 					newData=[]
 					var i,j,temparray,chunk = 5;
+					
+					// On regroupe les données
 					for (i=0,j=data.length; i<j; i+=chunk) {
 						temparray = data.slice(i,i+chunk);
 						newData = [...newData, temparray]
@@ -71,11 +86,15 @@ mkdirp(FILE_UPLOAD_DIR, (err) => {
 					  console.log(originalPath, result)
 					  return {...acc, [originalPath]: result}
 				  }, {})*/
+				  
+				  // On présente les données au format JSON
 				  console.log(newData)
 				  data = newData.reduce((a,c,i) => ({...a, [newImagesPath[i][0]]: c}), {})
+				  
 				  res.send(data)
 				})
 				
+				// Si on a une erreur, alors on arrette le process et on affiche le script
 				pythonProcess.stderr.on('data', (data) =>  {
 					pythonProcess.kill('SIGINT')
 					  data = data.toString().split(EOL)
